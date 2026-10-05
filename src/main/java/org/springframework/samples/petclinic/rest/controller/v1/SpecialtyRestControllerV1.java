@@ -88,7 +88,7 @@ public class SpecialtyRestControllerV1 implements SpecialtiesApi {
         if (currentSpecialty == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        currentSpecialty.setName(specialtyDto.getName());
+        currentSpecialty.setName(specialtyDto.name());
         this.clinicService.saveSpecialty(currentSpecialty);
         return new ResponseEntity<>(specialtyMapper.toSpecialtyDto(currentSpecialty), HttpStatus.NO_CONTENT);
     }

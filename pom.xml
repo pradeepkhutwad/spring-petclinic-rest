@@ -359,6 +359,8 @@
                             <inputSpec>${project.basedir}/src/main/resources/openapi.yml</inputSpec>
                             <generatorName>spring</generatorName>
                             <library>spring-boot</library>
+                            <!-- Override mutable Spring models with Java records. -->
+                            <templateDirectory>${project.basedir}/src/main/resources/openapi-templates</templateDirectory>
 
                             <!-- Only enabling model andopenapi-generator-maven-plugin API generation -->
                             <modelNameSuffix>Dto</modelNameSuffix>

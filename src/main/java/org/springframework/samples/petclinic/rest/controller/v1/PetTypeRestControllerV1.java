@@ -85,7 +85,7 @@ public class PetTypeRestControllerV1 implements PettypesApi {
         if (currentPetType == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        currentPetType.setName(petTypeDto.getName());
+        currentPetType.setName(petTypeDto.name());
         this.clinicService.savePetType(currentPetType);
         return new ResponseEntity<>(petTypeMapper.toPetTypeDto(currentPetType), HttpStatus.NO_CONTENT);
     }

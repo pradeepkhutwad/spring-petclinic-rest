@@ -65,12 +65,7 @@ class UserRestControllerV1Tests {
     @Test
     @WithMockUser(roles = "ADMIN")
     void testCreateUserError() throws Exception {
-        User user = new User();
-        user.setUsername(""); // set empty username to force 400 error
-        user.setPassword("password");
-        user.setEnabled(true);
-        ObjectMapper mapper = new ObjectMapper();
-        String newVetAsJSON = mapper.writeValueAsString(userMapper.toUserDto(user));
+        String newVetAsJSON = "{\"username\":\"\",\"password\":\"password\",\"enabled\":true}";
         this.mockMvc.perform(post("/api/users")
             .content(newVetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isBadRequest());

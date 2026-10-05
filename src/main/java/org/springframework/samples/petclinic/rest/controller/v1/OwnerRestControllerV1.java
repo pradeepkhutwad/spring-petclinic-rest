@@ -115,11 +115,11 @@ public class OwnerRestControllerV1 implements OwnersApi {
         if (currentOwner == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        currentOwner.setAddress(ownerFieldsDto.getAddress());
-        currentOwner.setCity(ownerFieldsDto.getCity());
-        currentOwner.setFirstName(ownerFieldsDto.getFirstName());
-        currentOwner.setLastName(ownerFieldsDto.getLastName());
-        currentOwner.setTelephone(ownerFieldsDto.getTelephone());
+        currentOwner.setAddress(ownerFieldsDto.address());
+        currentOwner.setCity(ownerFieldsDto.city());
+        currentOwner.setFirstName(ownerFieldsDto.firstName());
+        currentOwner.setLastName(ownerFieldsDto.lastName());
+        currentOwner.setTelephone(ownerFieldsDto.telephone());
         this.clinicService.saveOwner(currentOwner);
         return new ResponseEntity<>(ownerMapper.toOwnerDto(currentOwner), HttpStatus.NO_CONTENT);
     }
@@ -147,7 +147,6 @@ public class OwnerRestControllerV1 implements OwnersApi {
         Pet pet = petMapper.toPet(petFieldsDto);
         owner.setId(ownerId);
         pet.setOwner(owner);
-        pet.getType().setName(null);
         this.clinicService.savePet(pet);
         PetDto petDto = petMapper.toPetDto(pet);
         headers.setLocation(UriComponentsBuilder.newInstance().path("/api/pets/{id}")
@@ -162,9 +161,9 @@ public class OwnerRestControllerV1 implements OwnersApi {
         if (currentOwner != null) {
             Pet currentPet = this.clinicService.findPetById(petId);
             if (currentPet != null) {
-                currentPet.setBirthDate(petFieldsDto.getBirthDate());
-                currentPet.setName(petFieldsDto.getName());
-                currentPet.setType(petMapper.toPetType(petFieldsDto.getType()));
+                currentPet.setBirthDate(petFieldsDto.birthDate());
+                currentPet.setName(petFieldsDto.name());
+                currentPet.setType(petMapper.toPetType(petFieldsDto.type()));
                 this.clinicService.savePet(currentPet);
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }

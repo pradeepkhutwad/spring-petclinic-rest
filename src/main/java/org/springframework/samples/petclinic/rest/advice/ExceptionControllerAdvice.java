@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -68,6 +69,23 @@ public class ExceptionControllerAdvice {
         problemDetail.setProperty("timestamp", Instant.now());
         problemDetail.setProperty("schemaValidationErrors", List.<ValidationMessageDto>of());
         return problemDetail;
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseBody
+    public ResponseEntity<ProblemDetail> handleHttpMessageNotReadableException(
+        HttpMessageNotReadableException e,
+        HttpServletRequest request) {
+        logger.debug("Invalid request body at {} {}", request.getMethod(), request.getRequestURI(), e);
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ProblemDetail detail = this.detailBuild(e, status, request.getRequestURL(), ERROR_INVALID_REQUEST);
+        String message = "The request body contains invalid or missing values";
+        detail.setProperty("schemaValidationErrors", List.of(
+            new ValidationMessageDto(message)
+                .putAdditionalProperty("field", "requestBody")
+                .putAdditionalProperty("rejectedValue", "unavailable")
+                .putAdditionalProperty("defaultMessage", message)));
+        return ResponseEntity.status(status).body(detail);
     }
 
     /**

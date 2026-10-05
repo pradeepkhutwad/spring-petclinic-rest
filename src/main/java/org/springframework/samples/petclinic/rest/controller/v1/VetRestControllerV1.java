@@ -94,10 +94,10 @@ public class VetRestControllerV1 implements VetsApi {
         if (currentVet == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        currentVet.setFirstName(vetDto.getFirstName());
-        currentVet.setLastName(vetDto.getLastName());
+        currentVet.setFirstName(vetDto.firstName());
+        currentVet.setLastName(vetDto.lastName());
         currentVet.clearSpecialties();
-        for (Specialty spec : specialtyMapper.toSpecialtys(vetDto.getSpecialties())) {
+        for (Specialty spec : specialtyMapper.toSpecialtys(vetDto.specialties())) {
             currentVet.addSpecialty(spec);
         }
         if(currentVet.getNrOfSpecialties() > 0){
