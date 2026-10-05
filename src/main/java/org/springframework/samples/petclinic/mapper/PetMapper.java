@@ -41,12 +41,11 @@ public interface PetMapper {
     Collection<PetTypeDto> toPetTypeDtos(Collection<PetType> petTypes);
 
     default PetPageDto toPetPageDto(@NonNull Page<Pet> petPage) {
-        PetPageDto petPageDto = new PetPageDto();
-        petPageDto.setContent(toPetsDto(petPage.getContent()).stream().toList());
-        petPageDto.setPage(petPage.getNumber());
-        petPageDto.setSize(petPage.getSize());
-        petPageDto.setTotalElements(petPage.getTotalElements());
-        petPageDto.setTotalPages(petPage.getTotalPages());
-        return petPageDto;
+        return new PetPageDto(
+            toPetsDto(petPage.getContent()).stream().toList(),
+            petPage.getNumber(),
+            petPage.getSize(),
+            petPage.getTotalElements(),
+            petPage.getTotalPages());
     }
 }

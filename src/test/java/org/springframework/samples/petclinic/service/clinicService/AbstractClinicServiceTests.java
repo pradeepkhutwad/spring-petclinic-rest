@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.samples.petclinic.model.*;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.VisitValidationException;
 import org.springframework.samples.petclinic.util.EntityUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * <p> Base class for {@link ClinicService} integration tests. </p> <p> Subclasses should specify Spring context
@@ -260,6 +262,52 @@ abstract class AbstractClinicServiceTests {
 
         visits = this.clinicService.findAllVisits();
         assertThat(visits.size()).isEqualTo(found + 1);
+    }
+
+    @Test
+    void shouldRejectVisitInThePast() {
+        Visit visit = new Visit();
+        visit.setPet(this.clinicService.findPetById(1));
+        visit.setDate(LocalDate.now().minusDays(1));
+        visit.setDescription("past visit");
+
+        assertThatThrownBy(() -> this.clinicService.saveVisit(visit))
+            .isInstanceOf(VisitValidationException.class)
+            .hasMessage("Visits cannot be scheduled in the past.");
+    }
+
+    @Test
+    @Transactional
+    void shouldRejectDuplicateVisitForPetAndDate() {
+        Pet pet = this.clinicService.findPetById(1);
+        Visit visit = new Visit();
+        visit.setPet(pet);
+        visit.setDate(LocalDate.now());
+        visit.setDescription("first visit");
+        this.clinicService.saveVisit(visit);
+
+        Visit duplicate = new Visit();
+        duplicate.setPet(pet);
+        duplicate.setDate(visit.getDate());
+        duplicate.setDescription("duplicate visit");
+
+        assertThatThrownBy(() -> this.clinicService.saveVisit(duplicate))
+            .isInstanceOf(VisitValidationException.class)
+            .hasMessage("A visit is already scheduled for this pet on this date.");
+    }
+
+    @Test
+    void shouldRejectVisitForUnknownPet() {
+        Pet unknownPet = new Pet();
+        unknownPet.setId(Integer.MAX_VALUE);
+        Visit visit = new Visit();
+        visit.setPet(unknownPet);
+        visit.setDate(LocalDate.now());
+        visit.setDescription("visit for unknown pet");
+
+        assertThatThrownBy(() -> this.clinicService.saveVisit(visit))
+            .isInstanceOf(VisitValidationException.class)
+            .hasMessage("Pet with ID %d does not exist.".formatted(Integer.MAX_VALUE));
     }
 
     @Test

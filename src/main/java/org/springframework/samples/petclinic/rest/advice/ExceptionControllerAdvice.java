@@ -25,11 +25,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.rest.controller.BindingErrorsResponse;
 import org.springframework.samples.petclinic.rest.dto.ValidationMessageDto;
+import org.springframework.samples.petclinic.service.VisitValidationException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -70,6 +72,23 @@ public class ExceptionControllerAdvice {
         return problemDetail;
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseBody
+    public ResponseEntity<ProblemDetail> handleHttpMessageNotReadableException(
+        HttpMessageNotReadableException e,
+        HttpServletRequest request) {
+        logger.debug("Invalid request body at {} {}", request.getMethod(), request.getRequestURI(), e);
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ProblemDetail detail = this.detailBuild(e, status, request.getRequestURL(), ERROR_INVALID_REQUEST);
+        String message = "The request body contains invalid or missing values";
+        detail.setProperty("schemaValidationErrors", List.of(
+            new ValidationMessageDto(message)
+                .putAdditionalProperty("field", "requestBody")
+                .putAdditionalProperty("rejectedValue", "unavailable")
+                .putAdditionalProperty("defaultMessage", message)));
+        return ResponseEntity.status(status).body(detail);
+    }
+
     /**
      * Handles all general exceptions by returning a 500 Internal Server Error status with error details.
      *
@@ -104,6 +123,14 @@ public class ExceptionControllerAdvice {
         logger.debug("Data integrity violation stacktrace", e);
         HttpStatus status = HttpStatus.NOT_FOUND;
         ProblemDetail detail = this.detailBuild(e, status, request.getRequestURL(), ERROR_DATA_INTEGRITY);
+        return ResponseEntity.status(status).body(detail);
+    }
+
+    @ExceptionHandler(VisitValidationException.class)
+    @ResponseBody
+    public ResponseEntity<ProblemDetail> handleVisitValidationException(VisitValidationException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ProblemDetail detail = this.detailBuild(e, status, request.getRequestURL(), e.getMessage());
         return ResponseEntity.status(status).body(detail);
     }
 

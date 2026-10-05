@@ -39,6 +39,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -174,6 +176,10 @@ class PetTypeRestControllerV1Tests {
     void testCreatePetTypeSuccess() throws Exception {
     	PetType newPetType = petTypes.get(0);
     	newPetType.setId(null);
+        doAnswer(invocation -> {
+            ((PetType) invocation.getArgument(0)).setId(5);
+            return null;
+        }).when(clinicService).savePetType(any());
     	ObjectMapper mapper = new ObjectMapper();
         String newPetTypeAsJSON = mapper.writeValueAsString(petTypeMapper.toPetTypeFieldsDto(newPetType));
     	this.mockMvc.perform(post("/api/pettypes")
@@ -184,11 +190,7 @@ class PetTypeRestControllerV1Tests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     void testCreatePetTypeError() throws Exception {
-    	PetType newPetType = petTypes.get(0);
-    	newPetType.setId(null);
-    	newPetType.setName(null);
-    	ObjectMapper mapper = new ObjectMapper();
-        String newPetTypeAsJSON = mapper.writeValueAsString(petTypeMapper.toPetTypeDto(newPetType));
+        String newPetTypeAsJSON = "{\"name\":null}";
     	this.mockMvc.perform(post("/api/pettypes")
         		.content(newPetTypeAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         		.andExpect(status().isBadRequest());
@@ -218,10 +220,7 @@ class PetTypeRestControllerV1Tests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     void testUpdatePetTypeError() throws Exception {
-    	PetType newPetType = petTypes.get(0);
-    	newPetType.setName("");
-    	ObjectMapper mapper = new ObjectMapper();
-        String newPetTypeAsJSON = mapper.writeValueAsString(petTypeMapper.toPetTypeDto(newPetType));
+        String newPetTypeAsJSON = "{\"id\":1,\"name\":\"\"}";
     	this.mockMvc.perform(put("/api/pettypes/1")
     		.content(newPetTypeAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         	.andExpect(status().isBadRequest());

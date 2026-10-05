@@ -25,11 +25,13 @@ import org.springframework.samples.petclinic.rest.api.VisitsApi;
 import org.springframework.samples.petclinic.rest.dto.VisitDto;
 import org.springframework.samples.petclinic.rest.dto.VisitFieldsDto;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.VisitValidationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.transaction.Transactional;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,6 +79,7 @@ public class VisitRestControllerV1 implements VisitsApi {
     public ResponseEntity<VisitDto> addVisit(VisitDto visitDto) {
         HttpHeaders headers = new HttpHeaders();
         Visit visit = visitMapper.toVisit(visitDto);
+        validateVisitDate(visit);
         this.clinicService.saveVisit(visit);
         visitDto = visitMapper.toVisitDto(visit);
         headers.setLocation(UriComponentsBuilder.newInstance().path("/api/visits/{id}").buildAndExpand(visit.getId()).toUri());
@@ -90,10 +93,17 @@ public class VisitRestControllerV1 implements VisitsApi {
         if (currentVisit == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        currentVisit.setDate(visitDto.getDate());
-        currentVisit.setDescription(visitDto.getDescription());
+        currentVisit.setDate(visitDto.date());
+        currentVisit.setDescription(visitDto.description());
+        validateVisitDate(currentVisit);
         this.clinicService.saveVisit(currentVisit);
         return new ResponseEntity<>(visitMapper.toVisitDto(currentVisit), HttpStatus.NO_CONTENT);
+    }
+
+    private void validateVisitDate(Visit visit) {
+        if (visit.getDate() != null && visit.getDate().isBefore(LocalDate.now())) {
+            throw new VisitValidationException("Visits cannot be scheduled in the past.");
+        }
     }
 
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")

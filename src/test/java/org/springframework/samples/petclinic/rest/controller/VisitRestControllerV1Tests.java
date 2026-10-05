@@ -20,6 +20,8 @@ import org.springframework.samples.petclinic.rest.controller.v1.VisitRestControl
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -30,6 +32,7 @@ import org.springframework.samples.petclinic.model.PetType;
 import org.springframework.samples.petclinic.model.Visit;
 import org.springframework.samples.petclinic.rest.advice.ExceptionControllerAdvice;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.VisitValidationException;
 import org.springframework.samples.petclinic.service.clinicService.ApplicationTestConfig;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
@@ -42,7 +45,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -175,15 +182,51 @@ class VisitRestControllerV1Tests {
     @Test
     @WithMockUser(roles="OWNER_ADMIN")
     void testCreateVisitError() throws Exception {
-    	Visit newVisit = visits.get(0);
-    	newVisit.setId(null);
-        newVisit.setDescription(null);
-    	ObjectMapper mapper = new ObjectMapper();
-        String newVisitAsJSON = mapper.writeValueAsString(visitMapper.toVisitDto(newVisit));
+        String newVisitAsJSON = "{\"description\":null,\"petId\":8}";
     	this.mockMvc.perform(post("/api/visits")
         		.content(newVisitAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         		.andExpect(status().isBadRequest());
      }
+
+    @Test
+    @WithMockUser(roles="OWNER_ADMIN")
+    void testCreateVisitValidationError() throws Exception {
+        Visit newVisit = visits.get(0);
+        String newVisitAsJSON = new ObjectMapper().writeValueAsString(visitMapper.toVisitDto(newVisit));
+        willThrow(new VisitValidationException("Visits cannot be scheduled in the past."))
+            .given(this.clinicService).saveVisit(any(Visit.class));
+
+        var response = this.mockMvc.perform(post("/api/visits")
+                .content(newVisitAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andReturn()
+            .getResponse();
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(response.getContentAsString()).contains("Visits cannot be scheduled in the past.");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "2000-01-01",
+        "2020-06-15"
+    })
+    @WithMockUser(roles="OWNER_ADMIN")
+    void testCreateVisitWithPastDateReturnsBadRequest(String date) throws Exception {
+        when(this.clinicService.findPetById(8)).thenReturn(visits.get(0).getPet());
+        String visitJson = """
+            {"date":"%s","description":"checkup","petId":8}
+            """.formatted(date);
+
+        int status = this.mockMvc.perform(post("/api/visits")
+                .content(visitJson)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andReturn()
+            .getResponse()
+            .getStatus();
+
+        assertThat(status).isEqualTo(400);
+    }
 
     @Test
     @WithMockUser(roles="OWNER_ADMIN")
@@ -209,10 +252,7 @@ class VisitRestControllerV1Tests {
     @Test
     @WithMockUser(roles="OWNER_ADMIN")
     void testUpdateVisitError() throws Exception {
-    	Visit newVisit = visits.get(0);
-        newVisit.setDescription(null);
-    	ObjectMapper mapper = new ObjectMapper();
-        String newVisitAsJSON = mapper.writeValueAsString(visitMapper.toVisitDto(newVisit));
+        String newVisitAsJSON = "{\"description\":null}";
     	this.mockMvc.perform(put("/api/visits/2")
     		.content(newVisitAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         	.andExpect(status().isBadRequest());

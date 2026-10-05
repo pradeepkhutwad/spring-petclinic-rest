@@ -31,12 +31,11 @@ public interface OwnerMapper {
     Collection<Owner> toOwners(Collection<OwnerDto> ownerDtos);
 
     default OwnerPageDto toOwnerPageDto(@NonNull Page<Owner> ownerPage) {
-        OwnerPageDto ownerPageDto = new OwnerPageDto();
-        ownerPageDto.setContent(toOwnerDtoCollection(ownerPage.getContent()));
-        ownerPageDto.setPage(ownerPage.getNumber());
-        ownerPageDto.setSize(ownerPage.getSize());
-        ownerPageDto.setTotalElements(ownerPage.getTotalElements());
-        ownerPageDto.setTotalPages(ownerPage.getTotalPages());
-        return ownerPageDto;
+        return new OwnerPageDto(
+            toOwnerDtoCollection(ownerPage.getContent()),
+            ownerPage.getNumber(),
+            ownerPage.getSize(),
+            ownerPage.getTotalElements(),
+            ownerPage.getTotalPages());
     }
 }

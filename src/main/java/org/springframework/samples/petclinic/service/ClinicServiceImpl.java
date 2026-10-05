@@ -25,8 +25,10 @@ import org.springframework.samples.petclinic.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -219,8 +221,36 @@ public class ClinicServiceImpl implements ClinicService {
     @Override
     @Transactional
     public void saveVisit(Visit visit) throws DataAccessException {
-        visitRepository.save(visit);
+        if (visit.getDate() == null) {
+            throw new VisitValidationException("Visit date is required.");
+        }
+        boolean unchangedPastVisit = false;
+        if (visit.getDate().isBefore(LocalDate.now()) && visit.getId() != null) {
+            Visit existingVisit = findVisitById(visit.getId());
+            unchangedPastVisit = existingVisit != null && visit.getDate().equals(existingVisit.getDate());
+        }
+        if (visit.getDate().isBefore(LocalDate.now()) && !unchangedPastVisit) {
+            throw new VisitValidationException("Visits cannot be scheduled in the past.");
+        }
+        if (visit.getPet() == null || visit.getPet().getId() == null) {
+            throw new VisitValidationException("A valid pet ID is required.");
+        }
 
+        Pet pet = findPetById(visit.getPet().getId());
+        if (pet == null) {
+            throw new VisitValidationException("Pet with ID %d does not exist.".formatted(visit.getPet().getId()));
+        }
+        visit.setPet(pet);
+
+        boolean duplicateVisit = findVisitsByPetId(pet.getId()).stream()
+            .anyMatch(existingVisit ->
+                !Objects.equals(existingVisit.getId(), visit.getId())
+                    && visit.getDate().equals(existingVisit.getDate()));
+        if (duplicateVisit) {
+            throw new VisitValidationException("A visit is already scheduled for this pet on this date.");
+        }
+
+        visitRepository.save(visit);
     }
 
     @Override

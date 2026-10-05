@@ -150,11 +150,7 @@ class SpecialtyRestControllerV1Tests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     void testCreateSpecialtyError() throws Exception {
-    	Specialty newSpecialty = specialties.get(0);
-    	newSpecialty.setId(null);
-    	newSpecialty.setName(null);
-    	ObjectMapper mapper = new ObjectMapper();
-        String newSpecialtyAsJSON = mapper.writeValueAsString(specialtyMapper.toSpecialtyDto(newSpecialty));
+        String newSpecialtyAsJSON = "{\"name\":null}";
     	this.mockMvc.perform(post("/api/specialties")
         		.content(newSpecialtyAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         		.andExpect(status().isBadRequest());
@@ -184,10 +180,7 @@ class SpecialtyRestControllerV1Tests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     void testUpdateSpecialtyError() throws Exception {
-    	Specialty newSpecialty = specialties.get(0);
-    	newSpecialty.setName("");
-    	ObjectMapper mapper = new ObjectMapper();
-        String newSpecialtyAsJSON = mapper.writeValueAsString(specialtyMapper.toSpecialtyDto(newSpecialty));
+        String newSpecialtyAsJSON = "{\"id\":1,\"name\":\"\"}";
     	this.mockMvc.perform(put("/api/specialties/1")
     		.content(newSpecialtyAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         	.andExpect(status().isBadRequest());

@@ -66,31 +66,16 @@ public class V2RestControllersTests {
             .build();
         owners = new ArrayList<>();
 
-        OwnerDto ownerWithPet = new OwnerDto();
-        owners.add(ownerWithPet.id(1).firstName("George").lastName("Franklin").address("110 W. Liberty St.").city("Madison").telephone("6085551023"));
-        OwnerDto owner = new OwnerDto();
-        owners.add(owner.id(2).firstName("Betty").lastName("Davis").address("638 Cardinal Ave.").city("Sun Prairie").telephone("6085551749"));
-        owner = new OwnerDto();
-        owners.add(owner.id(3).firstName("Eduardo").lastName("Rodriquez").address("2693 Commerce St.").city("McFarland").telephone("6085558763"));
-        owner = new OwnerDto();
-        owners.add(owner.id(4).firstName("Harold").lastName("Davis").address("563 Friendly St.").city("Windsor").telephone("6085553198"));
+        owners.add(new OwnerDto("George", "Franklin", "110 W. Liberty St.", "Madison", "6085551023", 1, null));
+        owners.add(new OwnerDto("Betty", "Davis", "638 Cardinal Ave.", "Sun Prairie", "6085551749", 2, null));
+        owners.add(new OwnerDto("Eduardo", "Rodriquez", "2693 Commerce St.", "McFarland", "6085558763", 3, null));
+        owners.add(new OwnerDto("Harold", "Davis", "563 Friendly St.", "Windsor", "6085553198", 4, null));
 
-        PetTypeDto petType = new PetTypeDto();
-        petType.id(2)
-            .name("dog");
+        PetTypeDto petType = new PetTypeDto("dog", 2);
 
         pets = new ArrayList<>();
-        PetDto pet = new PetDto();
-        pets.add(pet.id(3)
-            .name("Rosy")
-            .birthDate(LocalDate.now())
-            .type(petType));
-
-        pet = new PetDto();
-        pets.add(pet.id(4)
-            .name("Jewel")
-            .birthDate(LocalDate.now())
-            .type(petType));
+        pets.add(new PetDto("Rosy", LocalDate.now(), petType, 3, null, null));
+        pets.add(new PetDto("Jewel", LocalDate.now(), petType, 4, null, null));
     }
 
     @Test

@@ -152,11 +152,9 @@ class VetRestControllerV1Tests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     void testCreateVetError() throws Exception {
-    	Vet newVet = vets.get(0);
-    	newVet.setId(null);
-    	newVet.setFirstName(null);
-    	ObjectMapper mapper = new ObjectMapper();
-        String newVetAsJSON = mapper.writeValueAsString(vetMapper.toVetDto(newVet));
+        String newVetAsJSON = """
+            {"firstName":null,"lastName":"Carter","specialties":[]}
+            """;
     	this.mockMvc.perform(post("/api/vets")
         		.content(newVetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         		.andExpect(status().isBadRequest());
@@ -187,10 +185,9 @@ class VetRestControllerV1Tests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     void testUpdateVetError() throws Exception {
-    	Vet newVet = vets.get(0);
-    	newVet.setFirstName(null);
-    	ObjectMapper mapper = new ObjectMapper();
-        String newVetAsJSON = mapper.writeValueAsString(vetMapper.toVetDto(newVet));
+        String newVetAsJSON = """
+            {"id":1,"firstName":null,"lastName":"Carter","specialties":[]}
+            """;
     	this.mockMvc.perform(put("/api/vets/1")
     		.content(newVetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         	.andExpect(status().isBadRequest());
