@@ -1,24 +1,29 @@
 package org.springframework.samples.petclinic.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.springframework.samples.petclinic.model.Vet;
-import org.springframework.samples.petclinic.rest.dto.VetDto;
-import org.springframework.samples.petclinic.rest.dto.VetFieldsDto;
-
 import java.util.Collection;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.samples.petclinic.model.Vet;
+import org.springframework.samples.petclinic.rest.controller.v1.dto.VetDto;
+import org.springframework.stereotype.Component;
 
 /**
- * Map Vet & VetoDto using mapstruct
+ * Map Vet Entity to VetDto.
  */
-@Mapper(uses = SpecialtyMapper.class)
-public interface VetMapper {
-    Vet toVet(VetDto vetDto);
+@Component
+public class VetMapper {
 
-    @Mapping(target = "id", ignore = true)
-    Vet toVet(VetFieldsDto vetFieldsDto);
+    public VetDto toVetDto(Vet vet) {
+        VetDto vetDto = new VetDto();
+        BeanUtils.copyProperties(vet, vetDto);
+        // New field: email
+        vetDto.setEmail(vet.getEmail());
+        return vetDto;
+    }
 
-    VetDto toVetDto(Vet vet);
+    public Collection<VetDto> toVetDtoCollection(Collection<Vet> vets) {
+        return vets.stream().map(this::toVetDto).collect(Collectors.toList());
+    }
 
-    Collection<VetDto> toVetDtos(Collection<Vet> vets);
 }
