@@ -1,24 +1,38 @@
+/*
+ * Copyright 2018 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.samples.petclinic.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+import org.mapstruct.factory.Mappers;
 import org.springframework.samples.petclinic.model.Vet;
 import org.springframework.samples.petclinic.rest.dto.VetDto;
-import org.springframework.samples.petclinic.rest.dto.VetFieldsDto;
-
-import java.util.Collection;
 
 /**
- * Map Vet & VetoDto using mapstruct
+ * Created by rajeevkumarsingh on 29/07/18.
  */
-@Mapper(uses = SpecialtyMapper.class)
+@Mapper
 public interface VetMapper {
-    Vet toVet(VetDto vetDto);
 
-    @Mapping(target = "id", ignore = true)
-    Vet toVet(VetFieldsDto vetFieldsDto);
+    VetMapper INSTANCE = Mappers.getMapper(VetMapper.class);
 
+    @Mappings({
+        @Mapping(source = "specialties", target = "specialties", qualifiedByName = "specialtiesToSpecialtiesDto")
+    })
     VetDto toVetDto(Vet vet);
-
-    Collection<VetDto> toVetDtos(Collection<Vet> vets);
 }
